@@ -13,32 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-//
-//@Service
-//public class ResultService {
-//
-//    @Autowired
-//    private QuizSubmissionRepository quizSubmissionRepository;
-//
-//    @Autowired
-//    private AnswerSheetRepository answerSheetRepository;
-//  
-//    public int calculateResult(String candidateName, String testKey) {
-//        List<QuizSubmission> submissions = quizSubmissionRepository.findByCandidateNameAndTestKey(candidateName, testKey);
-//       
-//        int score = 0;
-//        for (QuizSubmission submission : submissions) {
-//            for (Answer answer : submission.getAnswers()) {
-//                AnswerSheet answerSheet = answerSheetRepository.findByQuestionNo(answer.getQuestionNo());
-//                if (answerSheet != null && answerSheet.getCorrectOption().equals(answer.getSelectedOption())) {
-//                    score++;
-//                }
-//            }
-//        }
-//
-//        return score;
-//    }
-//}
+
 @Service
 public class ResultService {
 

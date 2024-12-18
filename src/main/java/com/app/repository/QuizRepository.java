@@ -10,6 +10,5 @@ import org.springframework.stereotype.Repository;
 public interface QuizRepository extends MongoRepository<Quiz, String> {
     // MongoRepository provides built-in methods like save(), findAll(), findById(), deleteById(), etc.
     
-    // You can define custom queries if needed, for example:
-    // List<Quiz> findByQuestionContaining(String keyword);
+   
 }
