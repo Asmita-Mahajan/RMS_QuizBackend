@@ -1,6 +1,14 @@
 package com.app.dto;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.mapping.Document;
+
+
+
+@Document(collection = "candidate_results")
 public class CandidateResultDTO {
+	@Id
+	private String id;
     private String candidateName;
     private String testKey;
     private int score;

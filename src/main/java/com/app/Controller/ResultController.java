@@ -3,6 +3,7 @@ package com.app.Controller;
 
 import com.app.dto.CandidateResultDTO;
 import com.app.entity.QuizSubmission;
+import com.app.service.CandidateResultService;
 import com.app.service.ResultService;
 
 import java.util.List;
@@ -16,6 +17,8 @@ public class ResultController {
 
     @Autowired
     private ResultService resultService;
+    @Autowired
+    private CandidateResultService candidateResultService;
 
     @GetMapping("/{candidateName}/{testKey}")
     public ResponseEntity<Integer> getResult(@PathVariable String candidateName, @PathVariable String testKey) {
@@ -28,4 +31,15 @@ public class ResultController {
         List<CandidateResultDTO> results = resultService.getAllResults();
         return ResponseEntity.ok(results);
     }
+    
+    @PostMapping("/save")
+    public ResponseEntity<List<CandidateResultDTO>> saveAllResults() {
+        List<CandidateResultDTO> results = resultService.getAllResults();
+        for (CandidateResultDTO result : results) {
+            candidateResultService.saveResult(result);
+        }
+        return ResponseEntity.ok(results);
+    }
+    
+    
 }
