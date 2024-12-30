@@ -3,9 +3,9 @@ package com.app.repository;
 
 
 
-import com.app.dto.CandidateResultDTO;
+import com.app.entity.CandidateResult;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
-public interface CandidateResultRepository extends MongoRepository<CandidateResultDTO, String> {
+public interface CandidateResultRepository extends MongoRepository<CandidateResult, String> {
     // Custom query methods if needed
 }

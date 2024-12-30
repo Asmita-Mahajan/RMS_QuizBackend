@@ -1,9 +1,10 @@
 package com.app.Controller;
 
 
-import com.app.dto.CandidateResultDTO;
-import com.app.entity.QuizSubmission;
-import com.app.service.CandidateResultService;
+import com.app.entity.CandidateResult;
+
+
+import com.app.service.KafkaProducerService;
 import com.app.service.ResultService;
 
 import java.util.List;
@@ -18,7 +19,11 @@ public class ResultController {
     @Autowired
     private ResultService resultService;
     @Autowired
-    private CandidateResultService candidateResultService;
+    private ResultService candidateResultService;
+
+    @Autowired
+    private KafkaProducerService kafkaProducerService;
+    private static final String TOPIC = "candidate_results";
 
     @GetMapping("/{candidateName}/{testKey}")
     public ResponseEntity<Integer> getResult(@PathVariable String candidateName, @PathVariable String testKey) {
@@ -27,19 +32,38 @@ public class ResultController {
     }
     
     @GetMapping("/all")
-    public ResponseEntity<List<CandidateResultDTO>> getAllCandidateResults() {
-        List<CandidateResultDTO> results = resultService.getAllResults();
+    public ResponseEntity<List<CandidateResult>> getAllCandidateResults() {
+        List<CandidateResult> results = resultService.getAllResults();
         return ResponseEntity.ok(results);
     }
-    
-    @PostMapping("/save")
-    public ResponseEntity<List<CandidateResultDTO>> saveAllResults() {
-        List<CandidateResultDTO> results = resultService.getAllResults();
-        for (CandidateResultDTO result : results) {
-            candidateResultService.saveResult(result);
-        }
-        return ResponseEntity.ok(results);
+
+
+//    @PostMapping("/save")
+//    public ResponseEntity<List<CandidateResult>> saveAllResults() {
+//        List<CandidateResult> results = resultService.getAllResults();
+//        for (CandidateResult result : results) {
+//            candidateResultService.saveResult(result);
+//        }
+//        return ResponseEntity.ok(results);
+//    }
+
+//@PostMapping("/save")
+//public ResponseEntity<List<CandidateResult>> saveAllResults() {
+//    List<CandidateResult> results = resultService.getAllResults();
+//    for (CandidateResult result : results) {
+//        candidateResultService.saveResult(result);
+//        kafkaProducerService.sendMessage(result.toString()); // Send result to Kafka
+//    }
+//    return ResponseEntity.ok(results);
+//}
+@PostMapping("/save")
+public ResponseEntity<List<CandidateResult>> saveAllResults() {
+    List<CandidateResult> results = resultService.getAllResults();
+    for (CandidateResult result : results) {
+        candidateResultService.saveResult(result);
+        kafkaProducerService.sendMessage(result.toString()); // Send result to Kafka
     }
-    
-    
+    return ResponseEntity.ok(results);
+}
+
 }

@@ -1,37 +1,44 @@
 
-//
-
-
 package com.app.service;
 
-import com.app.entity.Quiz;
-import com.app.entity.QuizSubmission;
+import com.app.entity.*;
+import com.app.repository.AnswerRepository;
+import com.app.repository.AnswerSheetRepository;
 import com.app.repository.QuizRepository;
 import com.app.repository.QuizSubmissionRepository;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
+import org.springframework.data.mongodb.core.MongoOperations;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class QuizServiceImpl implements QuizService {
 
     @Autowired
     private QuizRepository quizRepository;
-
+    @Autowired
+    private MongoOperations mongoOperations;
     @Autowired
     private SequenceGeneratorService sequenceGeneratorService;
 
     @Autowired
     private QuizSubmissionRepository quizSubmissionRepository;
+
+    @Autowired
+    private AnswerSheetRepository repository;
+
+    @Autowired
+    private AnswerRepository answerRepository;
 
     public List<Quiz> saveQuizzesFromExcel(MultipartFile file) throws IOException {
         List<Quiz> quizzes = new ArrayList<>();
@@ -62,9 +69,6 @@ public class QuizServiceImpl implements QuizService {
         return quizzes;
     }
 
-//    public List<Quiz> getAllQuizzes() {
-//        return quizRepository.findAll();
-//    }
     public List<Quiz> getAllQuizzes() {
         try {
             List<Quiz> quizzes = quizRepository.findAll(); // Fetch quizzes from the database
@@ -79,5 +83,84 @@ public class QuizServiceImpl implements QuizService {
     public void saveSubmission(QuizSubmission submission) {
         quizSubmissionRepository.save(submission);  // Save the submission to the database
     }
+
+
+    public void resetAndReassignQuestionNumbers() {
+        // Step 1: Reset all questionNo fields to 1
+        Query query = new Query(); // This query matches all documents
+        Update update = new Update().set("questionNo", 1); // Set questionNo to 1
+        mongoOperations.updateMulti(query, update, Quiz.class);
+
+        // Step 2: Retrieve all quizzes and reassign questionNo in sequence
+        List<Quiz> quizzes = mongoOperations.find(query, Quiz.class);
+        int questionNumber = 1;
+        for (Quiz quiz : quizzes) {
+            quiz.setQuestionNo(questionNumber++);
+            mongoOperations.save(quiz);
+        }
+    }
+    //answer by candidate
+
+    public List<Answer> saveAnswers(List<Answer> answers) {
+        return answerRepository.saveAll(answers);
+    }
+
+    //answersheet
+
+    public void saveAnswerSheet(MultipartFile file) throws IOException {
+        List<AnswerSheet> answerSheets = parseExcelFile(file.getInputStream());
+        repository.saveAll(answerSheets);
+    }
+
+    private List<AnswerSheet> parseExcelFile(InputStream is) throws IOException {
+        List<AnswerSheet> answerSheets = new ArrayList<>();
+        Workbook workbook = new XSSFWorkbook(is);
+        Sheet sheet = workbook.getSheetAt(0);
+
+        for (Row row : sheet) {
+            // Skip the header row
+            if (row.getRowNum() == 0) {
+                continue;
+            }
+
+            AnswerSheet answerSheet = new AnswerSheet();
+
+            // Parse questionNo
+            Cell questionNoCell = row.getCell(0);
+            if (questionNoCell != null) {
+                if (questionNoCell.getCellType() == CellType.NUMERIC) {
+                    answerSheet.setQuestionNo((int) questionNoCell.getNumericCellValue());
+                } else if (questionNoCell.getCellType() == CellType.STRING) {
+                    try {
+                        answerSheet.setQuestionNo(Integer.parseInt(questionNoCell.getStringCellValue()));
+                    } catch (NumberFormatException e) {
+                        throw new IOException("Invalid format for question number: " + questionNoCell.getStringCellValue(), e);
+                    }
+                }
+            }
+
+            // Parse correctOption
+            Cell correctOptionCell = row.getCell(1);
+            if (correctOptionCell != null && correctOptionCell.getCellType() == CellType.STRING) {
+                answerSheet.setCorrectOption(correctOptionCell.getStringCellValue());
+            }
+
+            answerSheets.add(answerSheet);
+        }
+
+        workbook.close();
+        return answerSheets;
+    }
+//    @Autowired
+//    //private MongoOperations mongoOperations;
+//    public int generateSequence(String seqName)
+//    { DatabaseSequence counter = mongoOperations.findAndModify(
+//            Query.query(Criteria.where("_id").is(seqName)),
+//            new Update().inc("seq", 1),
+//            FindAndModifyOptions.options().returnNew(true).upsert(true)
+//            , DatabaseSequence.class);
+//        return !Objects.isNull(counter) ? (int) counter.getSeq() : 1;
+//    }
+
 }
 
