@@ -21,17 +21,19 @@ import org.springframework.data.annotation.Transient;
 		private String optionB; 
 		private String optionC; 
 		private String optionD;
+		private String questionType;
 
 	    // Getters and setters...
 	    
 	    
 
-	    public Quiz(String question, String optionA, String optionB, String optionC, String optionD) {
+	    public Quiz(String question, String optionA, String optionB, String optionC, String optionD, String questionType) {
 	        this.question = question;
 	        this.optionA = optionA;
 	        this.optionB = optionB;
 	        this.optionC = optionC;
 	        this.optionD = optionD;
+			this.questionType=questionType;
 	    }
 
 

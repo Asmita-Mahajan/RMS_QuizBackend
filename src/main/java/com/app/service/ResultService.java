@@ -1,3 +1,4 @@
+
 package com.app.service;
 
 import com.app.entity.Answer;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ResultService {
@@ -28,12 +30,23 @@ public class ResultService {
     private CandidateResultRepository candidateResultRepository;
 
     public CandidateResult saveResult(CandidateResult result) {
-        return candidateResultRepository.save(result);
+        List<CandidateResult> existingResults = candidateResultRepository.findByCandidateNameAndTestKey(result.getCandidateName(), result.getTestKey());
+        if (!existingResults.isEmpty()) {
+            for (CandidateResult existingResult : existingResults) {
+                existingResult.setScore(result.getScore());
+                existingResult.setTestStatus(result.getTestStatus());
+                existingResult.setQuestionTypePercentages(result.getQuestionTypePercentages());
+                candidateResultRepository.save(existingResult);
+            }
+            return existingResults.get(0); // Return the first updated result
+        } else {
+            System.out.println("Saving new result: " + result);
+            return candidateResultRepository.save(result);
+        }
     }
 
-
     public int calculateResult(String candidateName, String testKey) {
-        int score = 0; // Declare score as a local variable
+        int score = 0;
         List<QuizSubmission> submissions = quizSubmissionRepository.findByCandidateNameAndTestKey(candidateName, testKey);
 
         for (QuizSubmission submission : submissions) {
@@ -48,13 +61,45 @@ public class ResultService {
         return score;
     }
 
+    public Map<String, Integer> calculateResultByQuestionType(String candidateName, String testKey) {
+        List<QuizSubmission> submissions = quizSubmissionRepository.findByCandidateNameAndTestKey(candidateName, testKey);
+
+        return submissions.stream()
+                .flatMap(submission -> submission.getAnswers().stream())
+                .filter(answer -> answer.getQuestionType() != null) // Filter out null question types
+                .collect(Collectors.groupingBy(Answer::getQuestionType, Collectors.summingInt(answer -> {
+                    AnswerSheet answerSheet = answerSheetRepository.findByQuestionNo(answer.getQuestionNo());
+                    return (answerSheet != null && answerSheet.getCorrectOption().equals(answer.getSelectedOption())) ? 1 : 0;
+                })));
+    }
+
+    public Map<String, Long> calculateTotalQuestionsByType(String candidateName, String testKey) {
+        List<QuizSubmission> submissions = quizSubmissionRepository.findByCandidateNameAndTestKey(candidateName, testKey);
+
+        return submissions.stream()
+                .flatMap(submission -> submission.getAnswers().stream())
+                .filter(answer -> answer.getQuestionType() != null) // Filter out null question types
+                .collect(Collectors.groupingBy(Answer::getQuestionType, Collectors.counting()));
+    }
+
+    public Map<String, Double> calculateQuestionTypePercentages(Map<String, Integer> questionTypeScores, Map<String, Long> totalQuestionsByType) {
+        Map<String, Double> percentages = new HashMap<>();
+        for (String questionType : questionTypeScores.keySet()) {
+            int score = questionTypeScores.get(questionType);
+            long totalQuestions = totalQuestionsByType.getOrDefault(questionType, 1L); // Avoid division by zero
+            double percentage = (double) score / totalQuestions * 100;
+            percentages.put(questionType, percentage);
+        }
+        return percentages;
+    }
+
     public List<CandidateResult> getAllResults() {
         List<QuizSubmission> submissions = quizSubmissionRepository.findAll();
         Map<String, CandidateResult> resultsMap = new HashMap<>();
 
         for (QuizSubmission submission : submissions) {
             String key = submission.getCandidateName() + "-" + submission.getTestKey();
-            CandidateResult result = resultsMap.getOrDefault(key, new CandidateResult(submission.getCandidateName(), submission.getTestKey(), 0));
+            CandidateResult result = resultsMap.getOrDefault(key, new CandidateResult(submission.getCandidateName(), submission.getTestKey()));
 
             for (Answer answer : submission.getAnswers()) {
                 AnswerSheet answerSheet = answerSheetRepository.findByQuestionNo(answer.getQuestionNo());
@@ -63,6 +108,11 @@ public class ResultService {
                 }
             }
 
+            Map<String, Integer> questionTypeScores = calculateResultByQuestionType(submission.getCandidateName(), submission.getTestKey());
+            Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(submission.getCandidateName(), submission.getTestKey());
+            Map<String, Double> questionTypePercentages = calculateQuestionTypePercentages(questionTypeScores, totalQuestionsByType);
+
+            result.setQuestionTypePercentages(questionTypePercentages);
             resultsMap.put(key, result);
         }
 

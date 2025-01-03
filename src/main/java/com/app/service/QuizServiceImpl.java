@@ -58,8 +58,8 @@ public class QuizServiceImpl implements QuizService {
             String optionB = row.getCell(2).getStringCellValue();
             String optionC = row.getCell(3).getStringCellValue();
             String optionD = row.getCell(4).getStringCellValue();
-
-            Quiz quiz = new Quiz(question, optionA, optionB, optionC, optionD);
+            String questionType = row.getCell(5).getStringCellValue();
+            Quiz quiz = new Quiz(question, optionA, optionB, optionC, optionD,questionType);
             quiz.setQuestionNo(sequenceGeneratorService.generateSequence(Quiz.SEQUENCE_NAME));
             quiz.setSet("A"); // Default set to "A"
             quizzes.add(quiz);
@@ -111,7 +111,6 @@ public class QuizServiceImpl implements QuizService {
         List<AnswerSheet> answerSheets = parseExcelFile(file.getInputStream());
         repository.saveAll(answerSheets);
     }
-
     private List<AnswerSheet> parseExcelFile(InputStream is) throws IOException {
         List<AnswerSheet> answerSheets = new ArrayList<>();
         Workbook workbook = new XSSFWorkbook(is);
@@ -145,22 +144,19 @@ public class QuizServiceImpl implements QuizService {
                 answerSheet.setCorrectOption(correctOptionCell.getStringCellValue());
             }
 
+            // Parse questionType
+            Cell questionTypeCell = row.getCell(2); // Assuming questionType is in the third column
+            if (questionTypeCell != null && questionTypeCell.getCellType() == CellType.STRING) {
+                answerSheet.setQuestionType(questionTypeCell.getStringCellValue());
+            }
+
             answerSheets.add(answerSheet);
         }
 
         workbook.close();
         return answerSheets;
     }
-//    @Autowired
-//    //private MongoOperations mongoOperations;
-//    public int generateSequence(String seqName)
-//    { DatabaseSequence counter = mongoOperations.findAndModify(
-//            Query.query(Criteria.where("_id").is(seqName)),
-//            new Update().inc("seq", 1),
-//            FindAndModifyOptions.options().returnNew(true).upsert(true)
-//            , DatabaseSequence.class);
-//        return !Objects.isNull(counter) ? (int) counter.getSeq() : 1;
-//    }
+
 
 }
 

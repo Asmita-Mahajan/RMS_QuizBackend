@@ -9,6 +9,7 @@ public class AnswerSheet {
     private String id;
     private int questionNo;
     private String correctOption;
+	private String questionType;
 	public String getId() {
 		return id;
 	}
@@ -27,7 +28,13 @@ public class AnswerSheet {
 	public void setCorrectOption(String correctOption) {
 		this.correctOption = correctOption;
 	}
-    
+	public String getQuestionType() {
+		return questionType;
+	}
+
+	public void setQuestionType(String questionType) {
+		this.questionType = questionType;
+	}
     
 
     // Getters and Setters

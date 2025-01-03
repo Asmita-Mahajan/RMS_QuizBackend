@@ -12,7 +12,8 @@ public class Answer {
 	
     private String questionId;
     private String selectedOption;
-    private int questionNo; 
+    private int questionNo;
+    private String questionType;
 
 
 

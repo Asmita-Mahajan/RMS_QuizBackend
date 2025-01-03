@@ -1,11 +1,10 @@
 package com.app.repository;
 
-
-
-
 import com.app.entity.CandidateResult;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
+import java.util.List;
+
 public interface CandidateResultRepository extends MongoRepository<CandidateResult, String> {
-    // Custom query methods if needed
+    List<CandidateResult> findByCandidateNameAndTestKey(String candidateName, String testKey);
 }

@@ -5,32 +5,34 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.Map;
+
 @Getter
 @Setter
-@Document(collection = "candidate_results")
+@Document(collection = "candidateResults")
 public class CandidateResult {
     @Id
     private String id;
     private String candidateName;
     private String testKey;
     private int score;
-    private TestStatus testStatus;
+    private String testStatus;
+    private Map<String, Double> questionTypePercentages; // Only include this field
 
-    // Constructors, getters, and setters
-    public CandidateResult(String candidateName, String testKey, int score) {
+    // Default constructor
+    public CandidateResult() {
+    }
+
+    // Constructor with parameters
+    public CandidateResult(String candidateName, String testKey, int score, Map<String, Double> questionTypePercentages) {
         this.candidateName = candidateName;
         this.testKey = testKey;
         this.score = score;
-        this.testStatus = TestStatus.COMPLETED; // Set default testStatus to QUIZ
-    }
-    @Override
-    public String toString() {
-        return "CandidateResult{" +
-                "candidateName='" + candidateName + '\'' +
-                ", testKey='" + testKey + '\'' +
-                ", score=" + score +
-                ", testStatus=" + testStatus + // Include testStatus in toString
-                '}';
+        this.questionTypePercentages = questionTypePercentages;
     }
 
+    public CandidateResult(String candidateName, String testKey) {
+        this.candidateName = candidateName;
+        this.testKey = testKey;
+    }
 }
