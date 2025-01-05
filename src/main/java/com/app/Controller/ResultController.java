@@ -64,7 +64,7 @@ public class ResultController {
         for (CandidateResult result : results) {
 
             candidateResultService.saveResult(result);
-            // kafkaProducerService.sendMessage(result.toString()); // Send result to Kafka
+             kafkaProducerService.sendMessage(result.toString()); // Send result to Kafka
         }
         return ResponseEntity.ok(results);
     }
