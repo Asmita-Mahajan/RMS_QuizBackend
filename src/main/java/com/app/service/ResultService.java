@@ -47,6 +47,10 @@ public class ResultService {
         }
     }
 
+    public List<CandidateResult> getAllCompletedResults() {
+        return candidateResultRepository.findByTestStatus(TestStatus.COMPLETED);
+    }
+
     public int calculateResult(String candidateName, String testKey) {
         int score = 0;
         List<QuizSubmission> submissions = quizSubmissionRepository.findByCandidateNameAndTestKey(candidateName, testKey);
@@ -60,6 +64,39 @@ public class ResultService {
             }
         }
 
+        return score;
+    }
+
+    public CandidateResult calculateAndSaveResult(String candidateName, String testKey, List<Answer> answers) {
+        // Calculate the score
+        int score = calculateScore(answers);
+
+        // Calculate question type percentages
+        Map<String, Integer> questionTypeScores = calculateResultByQuestionType(candidateName, testKey);
+        Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(candidateName, testKey);
+        Map<String, Double> questionTypePercentages = calculateQuestionTypePercentages(questionTypeScores, totalQuestionsByType);
+
+        // Create a new CandidateResult object
+        CandidateResult candidateResult = new CandidateResult();
+        candidateResult.setCandidateName(candidateName);
+        candidateResult.setTestKey(testKey);
+        candidateResult.setScore(score);
+        candidateResult.setTestStatus(TestStatus.COMPLETED);
+        candidateResult.setQuestionTypePercentages(questionTypePercentages);
+
+        // Save the result to the database
+        return candidateResultRepository.save(candidateResult);
+    }
+
+    // Helper method to calculate score based on answers
+    private int calculateScore(List<Answer> answers) {
+        int score = 0;
+        for (Answer answer : answers) {
+            AnswerSheet answerSheet = answerSheetRepository.findByQuestionNo(answer.getQuestionNo());
+            if (answerSheet != null && answerSheet.getCorrectOption().equals(answer.getSelectedOption())) {
+                score++;
+            }
+        }
         return score;
     }
 

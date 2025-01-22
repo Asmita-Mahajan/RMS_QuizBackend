@@ -32,26 +32,25 @@ public class CandidateResultPendingConsumer {
     private static final String DLQ_TOPIC = "candidate-results-pending-dlq";
 
 
-
-// Kafka listener to consume messages from the 'candidate-results' topic
-   @RetryableTopic(attempts = "1")// n-1 retry
+    @RetryableTopic(attempts = "1") // n-1 retry
     @KafkaListener(topics = "candidate-results-pending", groupId = "candidate-result-group")
     public void listen(String message) {
-
         try {
-            // Save the message to MongoDB
+            // Convert the message to a CandidateResult object
             CandidateResult candidateResult = new CandidateResult(message);
+
+            // Save the message to MongoDB
             candidateResultRepository.save(candidateResult);
             System.out.println("Received message: " + message);
-        }catch  (Exception e) {
+
+        } catch (Exception e) {
             // Log the error
-            // log.error("Error processing message: {}", e.getMessage(), e);
+           // log.error("Error processing message: {}", e.getMessage(), e);
 
             // Send to retry topic if an exception occurs
-          //  kafkaTemplate.send(RETRY_TOPIC, record.value());
+            kafkaTemplate.send(RETRY_TOPIC, message);
         }
     }
-
 
 
 

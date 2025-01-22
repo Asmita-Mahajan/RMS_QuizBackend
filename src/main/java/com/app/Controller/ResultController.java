@@ -4,11 +4,12 @@ package com.app.Controller;
 import com.app.entity.CandidateResult;
 import com.app.entity.TestStatus;
 import com.app.kafka.CandidateResultCompletedProducer;
-
+import com.app.entity.Answer;
 
 import com.app.kafka.CandidateResultPendingProducer;
 import com.app.service.ResultService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,20 +51,29 @@ public class ResultController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<Map<String, Object>> getAllCandidateResults() {
-        List<CandidateResult> results = resultService.getAllResults();
-        Map<String, Map<String, Double>> questionTypePercentages = results.stream()
-                .collect(Collectors.toMap(
-                        result -> result.getCandidateName() + "-" + result.getTestKey(),
-                        CandidateResult::getQuestionTypePercentages
-                ));
+    public ResponseEntity<List<CandidateResult>> getAllCandidateResults() {
+        List<CandidateResult> completedResults = resultService.getAllCompletedResults();
+        System.out.println("Number of completed results retrieved: " + completedResults.size());
 
-        Map<String, Object> response = Map.of(
-                "results", results,
-                "questionTypePercentages", questionTypePercentages
-        );
+        return ResponseEntity.ok(completedResults);
+    }
+    @PostMapping("/singlesave")
+    public ResponseEntity<CandidateResult> saveCandidateResult(@RequestBody Map<String, Object> submissionData) {
+        System.out.println("saveCandidateResult method called");
 
-        return ResponseEntity.ok(response);
+        // Extract data from submissionData
+        String candidateName = (String) submissionData.get("candidateName");
+        String testKey = (String) submissionData.get("testKey");
+        List<Answer> answers = (List<Answer>) submissionData.get("answers");
+
+        // Call the service method to calculate and save the result
+        CandidateResult savedResult = resultService.calculateAndSaveResult(candidateName, testKey, answers);
+
+        // Optionally send the saved result to a Kafka topic
+        producer2.sendMessage(savedResult.toString());
+
+        // Return the saved result in the response
+        return ResponseEntity.status(HttpStatus.CREATED).body(savedResult);
     }
 
     @PostMapping("/save")
@@ -77,18 +87,15 @@ public class ResultController {
                 //producer2.sendMessage(result.toString());
              //kafkaProducerService.sendMessage(result.toString()); // Send result to 
         }
-        for (CandidateResult result : results) {
-            System.out.println(result);
-        }
+//        for (CandidateResult result : results) {
+//            System.out.println(result);
+//        }
 
         return ResponseEntity.ok(results);
     }
-    
-//    @PostMapping("/publish")
-//    public String publishCandidateResult(@RequestBody CandidateResult candidateResult) {
-//        producer.sendMessage(candidateResult);
-//        return "Message published successfully!";
-//    }
+
+
+
 
 
     @PostMapping("/publish")
