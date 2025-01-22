@@ -2,7 +2,11 @@
 package com.app.Controller;
 
 import com.app.entity.CandidateResult;
-import com.app.service.KafkaProducerService;
+import com.app.entity.TestStatus;
+import com.app.kafka.CandidateResultCompletedProducer;
+
+
+import com.app.kafka.CandidateResultPendingProducer;
 import com.app.service.ResultService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +25,13 @@ public class ResultController {
     @Autowired
     private ResultService candidateResultService;
 
+  @Autowired
+  private CandidateResultPendingProducer producer;
+
     @Autowired
-    private KafkaProducerService kafkaProducerService;
+    private CandidateResultCompletedProducer producer2;
+
+    
     private static final String TOPIC = "candidate_results";
 
     @GetMapping("/{candidateName}/{testKey}")
@@ -62,10 +71,29 @@ public class ResultController {
         System.out.println("saveAllResults method called");
         List<CandidateResult> results = resultService.getAllResults();
         for (CandidateResult result : results) {
-
+            result.setTestStatus(TestStatus.COMPLETED);
             candidateResultService.saveResult(result);
-             kafkaProducerService.sendMessage(result.toString()); // Send result to Kafka
+            producer2.sendMessage(result.toString());
+                //producer2.sendMessage(result.toString());
+             //kafkaProducerService.sendMessage(result.toString()); // Send result to 
         }
+        for (CandidateResult result : results) {
+            System.out.println(result);
+        }
+
         return ResponseEntity.ok(results);
+    }
+    
+//    @PostMapping("/publish")
+//    public String publishCandidateResult(@RequestBody CandidateResult candidateResult) {
+//        producer.sendMessage(candidateResult);
+//        return "Message published successfully!";
+//    }
+
+
+    @PostMapping("/publish")
+    public String publishCandidateResults(@RequestBody List<CandidateResult> candidateResults) {
+        producer.sendMessages(candidateResults);
+        return "Messages published successfully!";
     }
 }

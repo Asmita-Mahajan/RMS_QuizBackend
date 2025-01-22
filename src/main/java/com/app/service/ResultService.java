@@ -1,10 +1,12 @@
 
+
 package com.app.service;
 
 import com.app.entity.Answer;
 import com.app.entity.AnswerSheet;
 import com.app.entity.CandidateResult;
 import com.app.entity.QuizSubmission;
+import com.app.entity.TestStatus;
 import com.app.repository.AnswerSheetRepository;
 import com.app.repository.CandidateResultRepository;
 import com.app.repository.QuizSubmissionRepository;
@@ -34,7 +36,7 @@ public class ResultService {
         if (!existingResults.isEmpty()) {
             for (CandidateResult existingResult : existingResults) {
                 existingResult.setScore(result.getScore());
-                existingResult.setTestStatus(result.getTestStatus());
+                existingResult.setTestStatus(TestStatus.COMPLETED);
                 existingResult.setQuestionTypePercentages(result.getQuestionTypePercentages());
                 candidateResultRepository.save(existingResult);
             }
@@ -107,7 +109,8 @@ public class ResultService {
                     result.setScore(result.getScore() + 1);
                 }
             }
-
+          //  TestStatus sta=submission.getTestStatus();
+//            result.getTestStatus(sta);
             Map<String, Integer> questionTypeScores = calculateResultByQuestionType(submission.getCandidateName(), submission.getTestKey());
             Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(submission.getCandidateName(), submission.getTestKey());
             Map<String, Double> questionTypePercentages = calculateQuestionTypePercentages(questionTypeScores, totalQuestionsByType);

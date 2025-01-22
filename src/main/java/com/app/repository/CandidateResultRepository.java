@@ -7,4 +7,9 @@ import java.util.List;
 
 public interface CandidateResultRepository extends MongoRepository<CandidateResult, String> {
     List<CandidateResult> findByCandidateNameAndTestKey(String candidateName, String testKey);
+
+    // New method to save multiple candidates
+    <S extends CandidateResult> List<S> saveAll(Iterable<S> entities);
+
+
 }

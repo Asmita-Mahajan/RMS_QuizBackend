@@ -5,6 +5,7 @@ package com.app.Controller;
 import com.app.entity.Quiz;
 import com.app.entity.QuizSubmission;
 
+import com.app.entity.TestStatus;
 import com.app.service.QuizService;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -45,6 +46,7 @@ public class QuizController {
  // Endpoint to handle quiz submission
     @PostMapping("/submit")
     public String submitQuiz(@RequestBody QuizSubmission submission) {
+        submission.setTestStatus(TestStatus.COMPLETED);
         quizService.saveSubmission(submission);  // Save the candidate's name, test key, and answers
         return "Quiz submitted successfully!";
     }
