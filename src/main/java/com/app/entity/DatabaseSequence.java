@@ -31,6 +31,6 @@ public class DatabaseSequence {
 	}
 	
 
-    // Getters and setters...
+
 }
 

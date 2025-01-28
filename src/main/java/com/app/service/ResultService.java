@@ -146,8 +146,7 @@ public class ResultService {
                     result.setScore(result.getScore() + 1);
                 }
             }
-          //  TestStatus sta=submission.getTestStatus();
-//            result.getTestStatus(sta);
+
             Map<String, Integer> questionTypeScores = calculateResultByQuestionType(submission.getCandidateName(), submission.getTestKey());
             Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(submission.getCandidateName(), submission.getTestKey());
             Map<String, Double> questionTypePercentages = calculateQuestionTypePercentages(questionTypeScores, totalQuestionsByType);

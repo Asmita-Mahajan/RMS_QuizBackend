@@ -84,12 +84,9 @@ public class ResultController {
             result.setTestStatus(TestStatus.COMPLETED);
             candidateResultService.saveResult(result);
             producer2.sendMessage(result.toString());
-                //producer2.sendMessage(result.toString());
-             //kafkaProducerService.sendMessage(result.toString()); // Send result to 
+
         }
-//        for (CandidateResult result : results) {
-//            System.out.println(result);
-//        }
+
 
         return ResponseEntity.ok(results);
     }
