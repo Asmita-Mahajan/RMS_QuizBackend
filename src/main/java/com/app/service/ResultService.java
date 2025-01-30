@@ -132,6 +132,12 @@ public class ResultService {
         return percentages;
     }
 
+    public boolean isValidCandidate(String candidateName, String testKey) {
+        // Implement the logic to check if the candidate exists in the database
+        List<CandidateResult> results = candidateResultRepository.findByCandidateNameAndTestKey(candidateName, testKey);
+        return !results.isEmpty(); // Return true if the candidate exists
+    }
+
     public List<CandidateResult> getAllResults() {
         List<QuizSubmission> submissions = quizSubmissionRepository.findAll();
         Map<String, CandidateResult> resultsMap = new HashMap<>();

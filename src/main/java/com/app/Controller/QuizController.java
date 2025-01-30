@@ -94,5 +94,11 @@ public class QuizController {
         quizService.resetAndReassignQuestionNumbers();
         return ResponseEntity.ok("Question numbers reset and reassigned starting from 1.");
     }
+
+    @GetMapping("/validate")
+    public ResponseEntity<Boolean> validateCandidate(@RequestParam String candidateName, @RequestParam String testKey) {
+        boolean isValid = candidateResultService.isValidCandidate(candidateName, testKey);
+        return ResponseEntity.ok(isValid);
+    }
  
 }

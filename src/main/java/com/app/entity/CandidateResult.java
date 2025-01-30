@@ -24,6 +24,7 @@ public class CandidateResult {
     private String testKey;
     private int score;
     private TestStatus testStatus;
+
     private Map<String, Double> questionTypePercentages; // Only include this field
 
     // Constructor with parameters
