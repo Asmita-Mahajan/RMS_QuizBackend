@@ -2,6 +2,8 @@
 
 package com.app.kafka;
 
+
+import com.app.Controller.NotificationController;
 import com.app.entity.CandidateResult;
 import com.app.repository.CandidateResultRepository;
 import com.app.service.ResultService;
@@ -13,6 +15,7 @@ import org.springframework.kafka.annotation.DltHandler;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.annotation.RetryableTopic;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Log
@@ -28,6 +31,9 @@ public class CandidateResultPendingConsumer {
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
 
+    @Autowired
+    private NotificationController notificationController;
+
     private static final String RETRY_TOPIC = "candidate-results-pending-retry";
     private static final String DLQ_TOPIC = "candidate-results-pending-dlq";
 
@@ -42,6 +48,7 @@ public class CandidateResultPendingConsumer {
             // Save the message to MongoDB
             candidateResultRepository.save(candidateResult);
             System.out.println("Received message: " + message);
+            notificationController.sendNotification("New candidate result received!"); // Send notification
 
         } catch (Exception e) {
             // Log the error

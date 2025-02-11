@@ -2,10 +2,7 @@
 package com.app.service;
 
 import com.app.entity.*;
-import com.app.repository.AnswerRepository;
-import com.app.repository.AnswerSheetRepository;
-import com.app.repository.QuizRepository;
-import com.app.repository.QuizSubmissionRepository;
+import com.app.repository.*;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class QuizServiceImpl implements QuizService {
@@ -32,18 +30,26 @@ public class QuizServiceImpl implements QuizService {
     private SequenceGeneratorService sequenceGeneratorService;
 
     @Autowired
+    private JobDescriptionRepository jobDescriptionRepository;
+
+    @Autowired
     private QuizSubmissionRepository quizSubmissionRepository;
 
     @Autowired
     private AnswerSheetRepository repository;
 
     @Autowired
+    private UploadedQuizRepository uploadedQuizRepository;
+
+    @Autowired
     private AnswerRepository answerRepository;
 
-    public List<Quiz> saveQuizzesFromExcel(MultipartFile file) throws IOException {
+    public List<Quiz> saveQuizzesFromExcel(MultipartFile file, String jobDescription) throws IOException {
         List<Quiz> quizzes = new ArrayList<>();
 
+
         InputStream inputStream = file.getInputStream();
+        String filename = file.getOriginalFilename();
         Workbook workbook = new XSSFWorkbook(inputStream);
         Sheet sheet = workbook.getSheetAt(0);
 
@@ -59,19 +65,38 @@ public class QuizServiceImpl implements QuizService {
             String optionC = row.getCell(3).getStringCellValue();
             String optionD = row.getCell(4).getStringCellValue();
             String questionType = row.getCell(5).getStringCellValue();
-            Quiz quiz = new Quiz(question, optionA, optionB, optionC, optionD,questionType);
+
+            // Create a new Quiz object
+            Quiz quiz = new Quiz(question, optionA, optionB, optionC, optionD, questionType,filename);
             quiz.setQuestionNo(sequenceGeneratorService.generateSequence(Quiz.SEQUENCE_NAME));
             quiz.setSet("A"); // Default set to "A"
+
             quizzes.add(quiz);
         }
 
+        // Save all quizzes to the database
         quizRepository.saveAll(quizzes);
+
+        // Create and save the UploadedQuiz entity
+        UploadedQuiz uploadedQuiz = new UploadedQuiz();
+        uploadedQuiz.setJobDescription(jobDescription);
+        uploadedQuiz.setFileName(file.getOriginalFilename()); // Store the uploaded file name
+        uploadedQuizRepository.save(uploadedQuiz);
+
         return quizzes;
     }
 
-    public List<Quiz> getAllQuizzes() {
+    public List<Quiz> getAllQuizzes(String filename) {
         try {
             List<Quiz> quizzes = quizRepository.findAll(); // Fetch quizzes from the database
+
+            // If a filename is provided, filter the quizzes by that filename
+            if (filename != null && !filename.isEmpty()) {
+                quizzes = quizzes.stream()
+                        .filter(quiz -> filename.equals(quiz.getFilename()))
+                        .collect(Collectors.toList());
+            }
+
             Collections.shuffle(quizzes); // Shuffle the list of quizzes
             return quizzes;
         } catch (Exception e) {
@@ -156,6 +181,12 @@ public class QuizServiceImpl implements QuizService {
         workbook.close();
         return answerSheets;
     }
+
+    @Override
+    public List<UploadedQuiz> getUploadedQuizzesByJobDescriptionName(String jobDescriptionName) {
+        return uploadedQuizRepository.findByJobDescription(jobDescriptionName);
+    }
+
 
 
 }

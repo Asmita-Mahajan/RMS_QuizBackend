@@ -32,7 +32,7 @@ public class ResultService {
     private CandidateResultRepository candidateResultRepository;
 
     public CandidateResult saveResult(CandidateResult result) {
-        List<CandidateResult> existingResults = candidateResultRepository.findByCandidateNameAndTestKey(result.getCandidateName(), result.getTestKey());
+        List<CandidateResult> existingResults = candidateResultRepository.findByEmail(result.getEmail());
         if (!existingResults.isEmpty()) {
             for (CandidateResult existingResult : existingResults) {
                 existingResult.setScore(result.getScore());
@@ -51,9 +51,9 @@ public class ResultService {
         return candidateResultRepository.findByTestStatus(TestStatus.COMPLETED);
     }
 
-    public int calculateResult(String candidateName, String testKey) {
+    public int calculateResult(String email, String testKey) {
         int score = 0;
-        List<QuizSubmission> submissions = quizSubmissionRepository.findByCandidateNameAndTestKey(candidateName, testKey);
+        List<QuizSubmission> submissions = quizSubmissionRepository.findByEmailAndTestKey(email, testKey);
 
         for (QuizSubmission submission : submissions) {
             for (Answer answer : submission.getAnswers()) {
@@ -67,18 +67,18 @@ public class ResultService {
         return score;
     }
 
-    public CandidateResult calculateAndSaveResult(String candidateName, String testKey, List<Answer> answers) {
+    public CandidateResult calculateAndSaveResult(String email, String testKey, List<Answer> answers) {
         // Calculate the score
         int score = calculateScore(answers);
 
         // Calculate question type percentages
-        Map<String, Integer> questionTypeScores = calculateResultByQuestionType(candidateName, testKey);
-        Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(candidateName, testKey);
+        Map<String, Integer> questionTypeScores = calculateResultByQuestionType(email, testKey);
+        Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(email, testKey);
         Map<String, Double> questionTypePercentages = calculateQuestionTypePercentages(questionTypeScores, totalQuestionsByType);
 
         // Create a new CandidateResult object
         CandidateResult candidateResult = new CandidateResult();
-        candidateResult.setCandidateName(candidateName);
+        candidateResult.setEmail(email);
         candidateResult.setTestKey(testKey);
         candidateResult.setScore(score);
         candidateResult.setTestStatus(TestStatus.COMPLETED);
@@ -100,8 +100,8 @@ public class ResultService {
         return score;
     }
 
-    public Map<String, Integer> calculateResultByQuestionType(String candidateName, String testKey) {
-        List<QuizSubmission> submissions = quizSubmissionRepository.findByCandidateNameAndTestKey(candidateName, testKey);
+    public Map<String, Integer> calculateResultByQuestionType(String email, String testKey) {
+        List<QuizSubmission> submissions = quizSubmissionRepository.findByEmailAndTestKey(email, testKey);
 
         return submissions.stream()
                 .flatMap(submission -> submission.getAnswers().stream())
@@ -112,8 +112,8 @@ public class ResultService {
                 })));
     }
 
-    public Map<String, Long> calculateTotalQuestionsByType(String candidateName, String testKey) {
-        List<QuizSubmission> submissions = quizSubmissionRepository.findByCandidateNameAndTestKey(candidateName, testKey);
+    public Map<String, Long> calculateTotalQuestionsByType(String email, String testKey) {
+        List<QuizSubmission> submissions = quizSubmissionRepository.findByEmailAndTestKey(email, testKey);
 
         return submissions.stream()
                 .flatMap(submission -> submission.getAnswers().stream())
@@ -132,9 +132,9 @@ public class ResultService {
         return percentages;
     }
 
-    public boolean isValidCandidate(String candidateName, String testKey) {
-        // Implement the logic to check if the candidate exists in the database
-        List<CandidateResult> results = candidateResultRepository.findByCandidateNameAndTestKey(candidateName, testKey);
+    public boolean isValidCandidate(String email) {
+//         Implement the logic to check if the candidate exists in the database
+        List<CandidateResult> results = candidateResultRepository.findByEmail(email);
         return !results.isEmpty(); // Return true if the candidate exists
     }
 
@@ -143,8 +143,8 @@ public class ResultService {
         Map<String, CandidateResult> resultsMap = new HashMap<>();
 
         for (QuizSubmission submission : submissions) {
-            String key = submission.getCandidateName() + "-" + submission.getTestKey();
-            CandidateResult result = resultsMap.getOrDefault(key, new CandidateResult(submission.getCandidateName(), submission.getTestKey()));
+            String key = submission.getEmail() + "-" + submission.getTestKey();
+            CandidateResult result = resultsMap.getOrDefault(key, new CandidateResult(submission.getEmail(), submission.getTestKey()));
 
             for (Answer answer : submission.getAnswers()) {
                 AnswerSheet answerSheet = answerSheetRepository.findByQuestionNo(answer.getQuestionNo());
@@ -153,8 +153,8 @@ public class ResultService {
                 }
             }
 
-            Map<String, Integer> questionTypeScores = calculateResultByQuestionType(submission.getCandidateName(), submission.getTestKey());
-            Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(submission.getCandidateName(), submission.getTestKey());
+            Map<String, Integer> questionTypeScores = calculateResultByQuestionType(submission.getEmail(), submission.getTestKey());
+            Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(submission.getEmail(), submission.getTestKey());
             Map<String, Double> questionTypePercentages = calculateQuestionTypePercentages(questionTypeScores, totalQuestionsByType);
 
             result.setQuestionTypePercentages(questionTypePercentages);

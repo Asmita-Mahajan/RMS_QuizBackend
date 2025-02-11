@@ -10,7 +10,7 @@ import com.app.entity.QuizSubmission;
 
 public interface QuizSubmissionRepository extends MongoRepository<QuizSubmission, String> {
 	
-	List<QuizSubmission> findByCandidateNameAndTestKey(String candidateName, String testKey);
+	List<QuizSubmission> findByEmailAndTestKey(String email, String testKey);
 }
 
 

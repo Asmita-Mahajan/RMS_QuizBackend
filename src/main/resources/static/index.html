@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.5.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+<h1>WebSocket Example</h1>
+<div id="notifications"></div>
+
+<script>
+    // Create a SockJS connection
+    var socket = new SockJS('http://localhost:8085/notifications'); // Use full URL if needed
+    var stompClient = Stomp.over(socket);
+
+    // Connect to the WebSocket
+    stompClient.connect({}, function (frame) {
+        console.log('Connected: ' + frame);
+
+        // Subscribe to the /topic/candidateResults topic
+        stompClient.subscribe('/topic/candidateResults', function (message) {
+            // Handle the received message
+            showNotification(message.body);
+        }, function (error) {
+            console.error('Subscription error: ', error);
+        });
+    }, function (error) {
+        console.error('Error connecting to WebSocket: ', error);
+    });
+
+    // Function to display notifications
+    function showNotification(message) {
+        var notificationsDiv = document.getElementById('notifications');
+        var notification = document.createElement('div');
+        notification.textContent = message;
+        notificationsDiv.appendChild(notification);
+        console.log('Notification received: ', message); // Log the received message
+    }
+</script>
+</body>
+</html>

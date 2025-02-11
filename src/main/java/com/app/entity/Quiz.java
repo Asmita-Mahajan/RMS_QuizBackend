@@ -22,18 +22,20 @@ import org.springframework.data.annotation.Transient;
 		private String optionC; 
 		private String optionD;
 		private String questionType;
+		private String filename;
 
 	    // Getters and setters...
 	    
 	    
 
-	    public Quiz(String question, String optionA, String optionB, String optionC, String optionD, String questionType) {
+	    public Quiz(String question, String optionA, String optionB, String optionC, String optionD, String questionType, String filename) {
 	        this.question = question;
 	        this.optionA = optionA;
 	        this.optionB = optionB;
 	        this.optionC = optionC;
 	        this.optionD = optionD;
 			this.questionType=questionType;
+			this.filename=filename;
 	    }
 
 		public String getId() {
@@ -112,10 +114,14 @@ import org.springframework.data.annotation.Transient;
 			return SEQUENCE_NAME;
 		}
 
-
-		
-		
+	public String getFilename() {
+		return filename;
 	}
+
+	public void setFilename(String filename) {
+		this.filename = filename;
+	}
+}
 
 	
 

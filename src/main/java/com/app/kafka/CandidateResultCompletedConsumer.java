@@ -41,7 +41,7 @@ public class CandidateResultCompletedConsumer {
 
             // Print JSON result to console
             System.out.println(jsonResult);
-            log.info(jsonResult);
+//            log.info(jsonResult);
 
         } catch (Exception e) {
             // Send to retry topic if an exception occurs

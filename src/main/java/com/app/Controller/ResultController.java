@@ -6,7 +6,7 @@ import com.app.entity.TestStatus;
 import com.app.kafka.CandidateResultCompletedProducer;
 import com.app.entity.Answer;
 
-import com.app.kafka.CandidateResultPendingProducer;
+//import com.app.kafka.CandidateResultPendingProducer;
 import com.app.service.ResultService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,8 +26,8 @@ public class ResultController {
     @Autowired
     private ResultService candidateResultService;
 
-  @Autowired
-  private CandidateResultPendingProducer producer;
+//  @Autowired
+//  private CandidateResultPendingProducer producer;
 
     @Autowired
     private CandidateResultCompletedProducer producer2;
@@ -57,6 +57,7 @@ public class ResultController {
 
         return ResponseEntity.ok(completedResults);
     }
+
     @PostMapping("/singlesave")
     public ResponseEntity<CandidateResult> saveCandidateResult(@RequestBody Map<String, Object> submissionData) {
         System.out.println("saveCandidateResult method called");
@@ -81,13 +82,11 @@ public class ResultController {
         System.out.println("saveAllResults method called");
         List<CandidateResult> results = resultService.getAllResults();
         for (CandidateResult result : results) {
-            result.setTestStatus(TestStatus.COMPLETED);
+//            result.setTestStatus(TestStatus.COMPLETED);
             candidateResultService.saveResult(result);
             producer2.sendMessage(result.toString());
 
         }
-
-
         return ResponseEntity.ok(results);
     }
 
@@ -95,9 +94,9 @@ public class ResultController {
 
 
 
-    @PostMapping("/publish")
-    public String publishCandidateResults(@RequestBody List<CandidateResult> candidateResults) {
-        producer.sendMessages(candidateResults);
-        return "Messages published successfully!";
-    }
+//    @PostMapping("/publish")
+//    public String publishCandidateResults(@RequestBody List<CandidateResult> candidateResults) {
+//        producer.sendMessages(candidateResults);
+//        return "Messages published successfully!";
+//    }
 }
