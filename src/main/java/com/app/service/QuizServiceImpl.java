@@ -110,28 +110,13 @@ public class QuizServiceImpl implements QuizService {
     }
 
 
-    public void resetAndReassignQuestionNumbers() {
-        // Step 1: Reset all questionNo fields to 1
-        Query query = new Query(); // This query matches all documents
-        Update update = new Update().set("questionNo", 1); // Set questionNo to 1
-        mongoOperations.updateMulti(query, update, Quiz.class);
 
-        // Step 2: Retrieve all quizzes and reassign questionNo in sequence
-        List<Quiz> quizzes = mongoOperations.find(query, Quiz.class);
-        int questionNumber = 1;
-        for (Quiz quiz : quizzes) {
-            quiz.setQuestionNo(questionNumber++);
-            mongoOperations.save(quiz);
-        }
-    }
     //answer by candidate
-
     public List<Answer> saveAnswers(List<Answer> answers) {
         return answerRepository.saveAll(answers);
     }
 
     //answersheet
-
     public void saveAnswerSheet(MultipartFile file) throws IOException {
         List<AnswerSheet> answerSheets = parseExcelFile(file.getInputStream());
         repository.saveAll(answerSheets);

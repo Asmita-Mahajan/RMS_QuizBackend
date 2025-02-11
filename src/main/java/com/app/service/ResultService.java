@@ -51,54 +51,9 @@ public class ResultService {
         return candidateResultRepository.findByTestStatus(TestStatus.COMPLETED);
     }
 
-    public int calculateResult(String email, String testKey) {
-        int score = 0;
-        List<QuizSubmission> submissions = quizSubmissionRepository.findByEmailAndTestKey(email, testKey);
 
-        for (QuizSubmission submission : submissions) {
-            for (Answer answer : submission.getAnswers()) {
-                AnswerSheet answerSheet = answerSheetRepository.findByQuestionNo(answer.getQuestionNo());
-                if (answerSheet != null && answerSheet.getCorrectOption().equals(answer.getSelectedOption())) {
-                    score++;
-                }
-            }
-        }
 
-        return score;
-    }
 
-    public CandidateResult calculateAndSaveResult(String email, String testKey, List<Answer> answers) {
-        // Calculate the score
-        int score = calculateScore(answers);
-
-        // Calculate question type percentages
-        Map<String, Integer> questionTypeScores = calculateResultByQuestionType(email, testKey);
-        Map<String, Long> totalQuestionsByType = calculateTotalQuestionsByType(email, testKey);
-        Map<String, Double> questionTypePercentages = calculateQuestionTypePercentages(questionTypeScores, totalQuestionsByType);
-
-        // Create a new CandidateResult object
-        CandidateResult candidateResult = new CandidateResult();
-        candidateResult.setEmail(email);
-        candidateResult.setTestKey(testKey);
-        candidateResult.setScore(score);
-        candidateResult.setTestStatus(TestStatus.COMPLETED);
-        candidateResult.setQuestionTypePercentages(questionTypePercentages);
-
-        // Save the result to the database
-        return candidateResultRepository.save(candidateResult);
-    }
-
-    // Helper method to calculate score based on answers
-    private int calculateScore(List<Answer> answers) {
-        int score = 0;
-        for (Answer answer : answers) {
-            AnswerSheet answerSheet = answerSheetRepository.findByQuestionNo(answer.getQuestionNo());
-            if (answerSheet != null && answerSheet.getCorrectOption().equals(answer.getSelectedOption())) {
-                score++;
-            }
-        }
-        return score;
-    }
 
     public Map<String, Integer> calculateResultByQuestionType(String email, String testKey) {
         List<QuizSubmission> submissions = quizSubmissionRepository.findByEmailAndTestKey(email, testKey);
@@ -138,7 +93,7 @@ public class ResultService {
         return !results.isEmpty(); // Return true if the candidate exists
     }
 
-    public List<CandidateResult> getAllResults() {
+    public List<CandidateResult> calucalteAllResults() {
         List<QuizSubmission> submissions = quizSubmissionRepository.findAll();
         Map<String, CandidateResult> resultsMap = new HashMap<>();
 

@@ -14,7 +14,7 @@ public interface QuizService {
 	 public List<Quiz> saveQuizzesFromExcel(MultipartFile file,String jobDescriptionId) throws IOException;
 	 public List<Quiz> getAllQuizzes(String filename);
 	 public void saveSubmission(QuizSubmission submission);
-	public void resetAndReassignQuestionNumbers();
+
 	 //answer service
 	 public List<Answer> saveAnswers(List<Answer> answers);
 	 //answersheet service

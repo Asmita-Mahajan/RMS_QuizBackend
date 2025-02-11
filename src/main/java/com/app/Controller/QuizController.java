@@ -27,17 +27,9 @@ public class QuizController {
 
     @Autowired
     private QuizService quizService;
-    @Autowired
-    private QuizService answerService;
-    @Autowired
-    private QuizService service;
 
     @Autowired
     private ResultService resultService;
-    @Autowired
-    private ResultService candidateResultService;
-
-
 
     @Autowired
     private CandidateResultCompletedProducer producer2;
@@ -45,11 +37,7 @@ public class QuizController {
     @Autowired
     private JobDescriptionService jobDescriptionService;
 
-
-
-
-    private static final String TOPIC = "candidate_results";
-
+//upload quiz file wrt jobdescription
     @PostMapping("/upload")
     public String uploadQuizFile(@RequestPart("file") MultipartFile file,
                                  @RequestParam("jobDescriptionId") String jobDescriptionId) {
@@ -61,48 +49,44 @@ public class QuizController {
         }
     }
 
-    @GetMapping("/all")
+    @GetMapping("/allquize")
     public List<Quiz> getAllQuizzes(@RequestParam(required = false) String filename) {
         return quizService.getAllQuizzes(filename);
     }
-    
- // Endpoint to handle quiz submission
+
+ // Endpoint to handle quiz submission and calculate result
     @PostMapping("/submit")
     public ResponseEntity<List<CandidateResult>> submitQuiz(@RequestBody QuizSubmission submission) {
+        //to save Quiz submission into database
         submission.setTestStatus(TestStatus.COMPLETED);
         quizService.saveSubmission(submission);
         System.out.println("saveAllResults method called");
-        List<CandidateResult> results = resultService.getAllResults();
+        //to caluclate result
+        List<CandidateResult> results = resultService.calucalteAllResults();
         for (CandidateResult result : results) {
-//            result.setTestStatus(TestStatus.COMPLETED);
-            candidateResultService.saveResult(result);
+            resultService.saveResult(result);
             producer2.sendMessage(result.toString());
-            //producer2.sendMessage(result.toString());
-            //kafkaProducerService.sendMessage(result.toString()); // Send result to
+
         }
-        // Save the candidate's name, test key, and answers
+
         return ResponseEntity.ok(results);
     }
-
+//to upload answer excel sheet
     @PostMapping("/answersupload")
     public ResponseEntity<String> uploadFile(@RequestParam("file") MultipartFile file) {
         try {
-            service.saveAnswerSheet(file);
+            quizService.saveAnswerSheet(file);
             return ResponseEntity.status(HttpStatus.OK).body("File uploaded and data saved successfully.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to upload file: " + e.getMessage());
         }
     }
 
-    @PostMapping("/resetquestions")
-    public ResponseEntity<String> resetAndReassignQuestionNumbers() {
-        quizService.resetAndReassignQuestionNumbers();
-        return ResponseEntity.ok("Question numbers reset and reassigned starting from 1.");
-    }
 
+// to validate candidate email and testkey
     @GetMapping("/validate")
     public ResponseEntity<Boolean> validateCandidate(@RequestParam String email) {
-        boolean isValid = candidateResultService.isValidCandidate(email);
+        boolean isValid = resultService.isValidCandidate(email);
         return ResponseEntity.ok(isValid);
     }
 
@@ -125,5 +109,23 @@ public class QuizController {
             return ResponseEntity.notFound().build(); // Return 404 if JobDescription not found
         }
     }
+
+
+    @GetMapping("/allcompletedcandidate")
+    public ResponseEntity<List<CandidateResult>> getAllCandidateResults() {
+        List<CandidateResult> completedResults = resultService.getAllCompletedResults();
+        System.out.println("Number of completed results retrieved: " + completedResults.size());
+
+        return ResponseEntity.ok(completedResults);
+    }
+
+
+
+//    @PostMapping("/publish")
+//    public String publishCandidateResults(@RequestBody List<CandidateResult> candidateResults) {
+//        producer.sendMessages(candidateResults);
+//        return "Messages published successfully!";
+//    }
+
 
 }
